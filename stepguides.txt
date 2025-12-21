@@ -1,0 +1,13 @@
+# Core Navigation & Tabs
+npm install @react-navigation/native @react-navigation/bottom-tabs
+
+# Essential Dependencies
+npm install react-native-screens react-native-safe-area-context
+
+# Animation & Icons
+npm install react-native-reanimated react-native-vector-icons
+
+// after error
+npm install react-native-worklets
+
+npm install @react-navigation/native-stack
