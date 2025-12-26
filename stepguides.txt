@@ -11,3 +11,5 @@ npm install react-native-reanimated react-native-vector-icons
 npm install react-native-worklets
 
 npm install @react-navigation/native-stack
+
+npm install @react-native-community/datetimepicker

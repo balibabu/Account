@@ -2,18 +2,14 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-// Import Screens
 import Home from './src/screens/home/Home';
 import Details from './src/screens/details/Details';
 import Settings from './src/screens/settings/Settings';
 import Form from './src/screens/form/Form';
 
-// Initialize Navigators
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// 1. Create the Tab Navigator Component (Only the actual tabs)
 function BottomTabs() {
   return (
     <Tab.Navigator
@@ -23,6 +19,7 @@ function BottomTabs() {
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: 'gray',
         headerStyle: { backgroundColor: '#f8f8f8' },
+        animation: 'shift',
       }}
     >
       <Tab.Screen name="Home" component={Home} options={{ title: '🏠 Home' }} />
@@ -32,30 +29,16 @@ function BottomTabs() {
   );
 }
 
-// 2. The Root App Component (The Stack)
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        
-        {/* The first screen is our Tab Navigator */}
-        <Stack.Screen 
-          name="MainTabs" 
-          component={BottomTabs} 
-          options={{ headerShown: false }} // Hide header so we see the Tab's header instead
-        />
-
-        {/* The Form is now a Stack screen, sitting "above" the tabs */}
-        <Stack.Screen 
-          name="Form" 
-          component={Form} 
-          options={{ 
-            title: 'Entry Form',
+        <Stack.Screen name="MainTabs" component={BottomTabs} options={{ headerShown: false }}/>
+        <Stack.Screen name="Form" component={Form} options={{ title: 'Entry Form',
             presentation: 'modal', // Optional: Makes it slide up like a card
             animation: 'slide_from_bottom' // Optional: Animation style
           }} 
         />
-
       </Stack.Navigator>
     </NavigationContainer>
   );
