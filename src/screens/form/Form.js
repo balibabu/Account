@@ -9,9 +9,10 @@ import {
   Platform,
   KeyboardAvoidingView,
   Modal,
-  SafeAreaView
+  // SafeAreaView
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // Standard library
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Form({ route, navigation }) {
   const { id } = route.params || { id: 0 };

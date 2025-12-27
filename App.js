@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -6,6 +6,24 @@ import Home from './src/screens/home/Home';
 import Details from './src/screens/details/Details';
 import Settings from './src/screens/settings/Settings';
 import Form from './src/screens/form/Form';
+import { auth } from './src/firebaseConfig';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signOut 
+} from 'firebase/auth';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  TextInput, 
+  Button, 
+  ActivityIndicator, 
+  Alert, 
+  // SafeAreaView
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LoginScreen from './src/screens/login/LoginScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -30,16 +48,89 @@ function BottomTabs() {
 }
 
 export default function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
+    return unsubscribe;
+  }, []);
+
+  const handleLogin = async (email, password) => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      Alert.alert("Login Failed", error.message);
+    }
+  };
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  if (!user) return <LoginScreen onLogin={handleLogin}/>;
+
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="MainTabs" component={BottomTabs} options={{ headerShown: false }}/>
-        <Stack.Screen name="Form" component={Form} options={{ title: 'Entry Form',
-            presentation: 'modal', // Optional: Makes it slide up like a card
-            animation: 'slide_from_bottom' // Optional: Animation style
-          }} 
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator>
+      <Stack.Screen name="MainTabs" component={BottomTabs} options={{ headerShown: false }}/>
+      <Stack.Screen name="Form" component={Form} options={{ title: 'Entry Form',
+          presentation: 'modal', // Optional: Makes it slide up like a card
+          animation: 'slide_from_bottom' // Optional: Animation style
+        }} 
+      />
+    </Stack.Navigator>
+  </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  emailText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: 'gray',
+  },
+  input: {
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+  },
+});
+
+  
+//   return (
+//     <NavigationContainer>
+//       <Stack.Navigator>
+//         <Stack.Screen name="MainTabs" component={BottomTabs} options={{ headerShown: false }}/>
+//         <Stack.Screen name="Form" component={Form} options={{ title: 'Entry Form',
+//             presentation: 'modal', // Optional: Makes it slide up like a card
+//             animation: 'slide_from_bottom' // Optional: Animation style
+//           }} 
+//         />
+//       </Stack.Navigator>
+//     </NavigationContainer>
+//   );
+// }

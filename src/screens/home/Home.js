@@ -8,12 +8,7 @@ export default function Home() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>🏠 Home Screen</Text>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => navigation.navigate('Form', { id: 0 })}
-      >
+      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('Form', { id: 0 })}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
     </View>
