@@ -1,72 +1,48 @@
 // src/LoginScreen.js
 import React, { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Keyboard,
-  TouchableWithoutFeedback
-} from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ActivityIndicator, Alert } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
-const LoginScreen = ({ onLogin, loading }) => {
+
+export default function LoginScreen(){
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handlePress = () => {
-    // Pass the email and password back to the parent component
-    if(onLogin) {
-      onLogin(email, password);
+
+  const handlePress = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (error) {
+      Alert.alert("Login Failed", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    // Dismiss keyboard when clicking outside inputs
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
         <View style={styles.headerContainer}>
           <Text style={styles.welcomeText}>Welcome Back</Text>
           <Text style={styles.subText}>Sign in to continue</Text>
         </View>
-
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="user@example.com"
-              placeholderTextColor="#aaa"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+            <TextInput style={styles.input} placeholder="user@example.com" placeholderTextColor="#aaa" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
           </View>
-
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="**********"
-              placeholderTextColor="#aaa"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <TextInput style={styles.input} placeholder="**********" placeholderTextColor="#aaa" value={password} onChangeText={setPassword} secureTextEntry />
           </View>
-
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handlePress}
-            disabled={loading}
-          >
+          <TouchableOpacity style={styles.button} onPress={handlePress} disabled={loading}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
@@ -149,5 +125,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export default LoginScreen;

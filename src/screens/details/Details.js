@@ -2,124 +2,101 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
   TextInput,
   Alert,
-  // SafeAreaView,
   StatusBar,
-  Platform
+  Platform,
+  StyleSheet,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// Mock Data
-const INITIAL_DATA = [
-  { id: 1, amount: 4500, type: 'Income', description: 'Sold my old gaming console', date: '2023-10-01' },
-  { id: 2, amount: 120.50, type: 'Expense', description: 'Grocery shopping', date: '2025-10-03' },
-  { id: 3, amount: 55.00, type: 'Expense', description: 'Uber to airport', date: '2023-10-05' },
-  { id: 4, amount: 1200, type: 'Income', description: 'Web design project', date: '2024-10-06' },
-  { id: 5, amount: 15.00, type: 'Expense', description: 'Coffee', date: '2023-10-07' },
-];
+import { useData } from '../../contexts/DataContext';
 
 export default function DetailsScreen({ navigation }) {
-  const [transactions, setTransactions] = useState(INITIAL_DATA);
-  const [filteredData, setFilteredData] = useState(INITIAL_DATA);
-  
-  // Search State
+  const { data, remove } = useData();
+
+  const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Date Filter State
+
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
   useEffect(() => {
-    applyFilters();
-  }, [searchQuery, fromDate, toDate, transactions]);
+    let result = [...data];
 
-  const applyFilters = () => {
-    let result = transactions;
-
-    // Search
     if (searchQuery) {
-      const lowerQuery = searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.description.toLowerCase().includes(lowerQuery) ||
-        item.amount.toString().includes(lowerQuery)
+      const q = searchQuery.toLowerCase();
+      result = result.filter(i =>
+        i.description.toLowerCase().includes(q) ||
+        String(i.amount).includes(q)
       );
     }
 
-    // Date Range
     if (fromDate) {
-      result = result.filter(item => new Date(item.date) >= fromDate);
+      result = result.filter(i => new Date(i.date) >= fromDate);
     }
+
     if (toDate) {
-      result = result.filter(item => new Date(item.date) <= toDate);
+      result = result.filter(i => new Date(i.date) <= toDate);
     }
 
     setFilteredData(result);
-  };
+  }, [searchQuery, fromDate, toDate, data]);
 
-  // --- Handlers ---
-  const handleDateChange = (event, selectedDate, type) => {
-    // Hide pickers immediately
-    if (type === 'from') setShowFromPicker(Platform.OS === 'ios');
-    if (type === 'to') setShowToPicker(Platform.OS === 'ios');
-
-    if (event.type === 'set' && selectedDate) {
-      if (type === 'from') setFromDate(selectedDate);
-      if (type === 'to') setToDate(selectedDate);
-    } else if (event.type === 'dismissed') {
-       if (type === 'from') setShowFromPicker(false);
-       if (type === 'to') setShowToPicker(false);
-    }
-  };
-
-  const handleDelete = (id) => {
-    Alert.alert("Delete", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => setTransactions(transactions.filter(t => t.id !== id)) }
+  const handleDelete = id => {
+    Alert.alert('Delete', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => remove(id) },
     ]);
   };
 
-  const formatDateDisplay = (date) => {
-    if (!date) return '';
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD
-  };
+  const formatDate = d => d.toISOString().split('T')[0];
 
-  // --- Render Item (Compact Version) ---
   const renderItem = ({ item }) => {
     const isIncome = item.type === 'Income';
-    
+
     return (
-      <TouchableOpacity 
-        style={styles.card} 
+      <TouchableOpacity
+        style={styles.card}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('Form', { id: item.id })}
       >
-        <View style={[styles.cardStrip, { backgroundColor: isIncome ? '#10B981' : '#EF4444' }]} />
-        
+        <View
+          style={[
+            styles.cardStrip,
+            { backgroundColor: isIncome ? '#10B981' : '#EF4444' },
+          ]}
+        />
+
         <View style={styles.cardContent}>
-          {/* Top Row: Description & Amount */}
           <View style={styles.cardRow}>
             <Text style={styles.description} numberOfLines={1}>
               {item.description}
             </Text>
-            <Text style={[styles.amount, { color: isIncome ? '#10B981' : '#EF4444' }]}>
-              {isIncome ? '+' : '-'}${parseFloat(item.amount).toFixed(2)}
+            <Text
+              style={[
+                styles.amount,
+                { color: isIncome ? '#10B981' : '#EF4444' },
+              ]}
+            >
+              {isIncome ? '+' : '-'}${Number(item.amount).toFixed(2)}
             </Text>
           </View>
-          
-          {/* Bottom Row: Date */}
+
           <View style={styles.cardRow}>
-             <Text style={styles.date}>{item.date}</Text>
+            <Text style={styles.date}>{formatDate(new Date(item.date))}</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDelete(item.id)}
+        >
           <Text style={styles.deleteIcon}>🗑</Text>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -129,16 +106,17 @@ export default function DetailsScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
-      
-      {/* Header */}
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Transactions</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('Form', { id: 0 })}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('Form')}
+        >
           <Text style={styles.addButtonText}>+ Add</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -150,34 +128,40 @@ export default function DetailsScreen({ navigation }) {
             placeholderTextColor="#9CA3AF"
           />
         </View>
-        <TouchableOpacity 
-          style={[styles.filterButton, showFilters && styles.filterButtonActive]} 
-          onPress={() => setShowFilters(!showFilters)}
+
+        <TouchableOpacity
+          style={[styles.filterButton, showFilters && styles.filterButtonActive]}
+          onPress={() => setShowFilters(v => !v)}
         >
-          <Text style={[styles.filterIcon, showFilters && { color: '#fff' }]}>⚙️</Text>
+          <Text style={[styles.filterIcon, showFilters && { color: '#fff' }]}>
+            ⚙️
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Expandable Date Filters (With Pickers) */}
       {showFilters && (
         <View style={styles.filterContainer}>
-          {/* FROM DATE */}
           <View style={styles.filterInputGroup}>
             <Text style={styles.filterLabel}>From</Text>
-            <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowFromPicker(true)}>
+            <TouchableOpacity
+              style={styles.datePickerButton}
+              onPress={() => setShowFromPicker(true)}
+            >
               <Text style={styles.datePickerText}>
-                {fromDate ? formatDateDisplay(fromDate) : 'Start Date'}
+                {fromDate ? formatDate(fromDate) : 'Start Date'}
               </Text>
               <Text style={styles.calendarIcon}>📅</Text>
             </TouchableOpacity>
           </View>
 
-          {/* TO DATE */}
           <View style={styles.filterInputGroup}>
             <Text style={styles.filterLabel}>To</Text>
-            <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowToPicker(true)}>
+            <TouchableOpacity
+              style={styles.datePickerButton}
+              onPress={() => setShowToPicker(true)}
+            >
               <Text style={styles.datePickerText}>
-                {toDate ? formatDateDisplay(toDate) : 'End Date'}
+                {toDate ? formatDate(toDate) : 'End Date'}
               </Text>
               <Text style={styles.calendarIcon}>📅</Text>
             </TouchableOpacity>
@@ -185,36 +169,45 @@ export default function DetailsScreen({ navigation }) {
         </View>
       )}
 
-      {/* Hidden Pickers (Conditional Rendering) */}
       {showFromPicker && (
         <DateTimePicker
           value={fromDate || new Date()}
           mode="date"
           display="default"
-          onChange={(e, d) => handleDateChange(e, d, 'from')}
+          onChange={(_, d) => {
+            setShowFromPicker(false);
+            if (d) setFromDate(d);
+          }}
         />
       )}
+
       {showToPicker && (
         <DateTimePicker
           value={toDate || new Date()}
           mode="date"
           display="default"
-          onChange={(e, d) => handleDateChange(e, d, 'to')}
+          onChange={(_, d) => {
+            setShowToPicker(false);
+            if (d) setToDate(d);
+          }}
         />
       )}
 
       <FlatList
         data={filteredData}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <View style={styles.emptyState}><Text style={styles.emptyText}>No transactions found.</Text></View>
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No transactions found.</Text>
+          </View>
         }
       />
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },

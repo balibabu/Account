@@ -16,13 +16,14 @@ npm install @react-native-community/datetimepicker
 
 npm install @react-native-async-storage/async-storage
 
+// create firestore database, otherwise it wont work
 
 
 
 ==========================================NEXT STEPS+++++++++++++++++++++++++++++++++++++++++
 -> create login page with firestore integration [done]
+-> store created data in firestore and using useContext  [done]
 
--> store created data in firestore and using useContext
 -> implement update and delete function
 -> create home page to show data summary
 -> create settings: logout, change password, and later fingerprint integration for opening app

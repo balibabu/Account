@@ -3,69 +3,66 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Platform,
   KeyboardAvoidingView,
   Modal,
-  // SafeAreaView
+  StyleSheet,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker'; // Standard library
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useData } from '../../contexts/DataContext';
 
 export default function Form({ route, navigation }) {
-  const { id } = route.params || { id: 0 };
-  const isEditing = id > 0;
+  const { id } = route.params || {};
+  const isEditing = !!id;
 
-  // --- State ---
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date());
-  const [type, setType] = useState('Expense'); // Default
+  const [type, setType] = useState('Income');
   const [description, setDescription] = useState('');
-  
-  // UI State
+
+  const { data, save } = useData();
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTypePicker, setShowTypePicker] = useState(false);
 
-  // --- Effects ---
   useEffect(() => {
-    if (isEditing) {
-      // Simulate fetching data for ID
-      // Replace this with your actual DB call
-      setAmount('150.00');
-      setType('Income');
-      setDescription('Freelance project payment for design work.');
-      setDate(new Date()); 
-    }
-  }, [id, isEditing]);
+    console.log(data);
+    if (!isEditing) return;
+    const item = data.find(i => i.id === id);
+    if (!item) return;
 
-  // --- Handlers ---
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
-    setDate(currentDate);
+    setAmount(String(item.amount));
+    setDate(new Date(item.date));
+    setType(item.type);
+    setDescription(item.description);
+  }, [id, isEditing, data]);
+
+  const handleDateChange = (_, selectedDate) => {
+    if (selectedDate) setDate(selectedDate);
+    setShowDatePicker(false);
   };
 
   const handleSave = () => {
-    const payload = { id, amount: parseFloat(amount), date, type, description };
-    console.log(isEditing ? 'Updating:' : 'Creating:', payload);
+    save({
+      id,
+      amount: Number(amount),
+      date: date.toISOString(),
+      type,
+      description,
+    });
     navigation.goBack();
   };
 
-  // --- Render Helpers ---
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  const formatDate = d =>
+    d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
         <View style={styles.header}>
@@ -78,44 +75,44 @@ export default function Form({ route, navigation }) {
         </View>
 
         <ScrollView contentContainerStyle={styles.formContainer}>
-          
-          {/* Amount Field */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Amount</Text>
             <View style={styles.amountContainer}>
               <Text style={styles.currencySymbol}>$</Text>
               <TextInput
                 style={styles.amountInput}
-                placeholder="0.00"
                 keyboardType="numeric"
                 value={amount}
                 onChangeText={setAmount}
+                placeholder="0.00"
                 placeholderTextColor="#A0A0A0"
               />
             </View>
           </View>
 
-          {/* Type Dropdown (Custom UI) */}
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
               <Text style={styles.label}>Type</Text>
-              <TouchableOpacity 
-                style={styles.selector} 
+              <TouchableOpacity
+                style={styles.selector}
                 onPress={() => setShowTypePicker(true)}
               >
-                <Text style={[
-                  styles.selectorText, 
-                  type === 'Income' ? styles.textSuccess : styles.textDanger
-                ]}>{type}</Text>
+                <Text
+                  style={[
+                    styles.selectorText,
+                    type === 'Income' ? styles.textSuccess : styles.textDanger,
+                  ]}
+                >
+                  {type}
+                </Text>
                 <Text style={styles.dropdownIcon}>▼</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Date Picker */}
             <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
               <Text style={styles.label}>Date</Text>
-              <TouchableOpacity 
-                style={styles.selector} 
+              <TouchableOpacity
+                style={styles.selector}
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.selectorText}>{formatDate(date)}</Text>
@@ -123,26 +120,23 @@ export default function Form({ route, navigation }) {
             </View>
           </View>
 
-          {/* Description Field */}
-          <View style={[styles.inputGroup, { flex: 1 }]}>
+          <View style={styles.inputGroup}>
             <Text style={styles.label}>Description</Text>
             <TextInput
               style={styles.textArea}
-              placeholder="What is this transaction for?"
               multiline
               textAlignVertical="top"
               value={description}
               onChangeText={setDescription}
+              placeholder="What is this transaction for?"
               placeholderTextColor="#A0A0A0"
             />
           </View>
-
         </ScrollView>
 
-        {/* Footer Buttons */}
         <View style={styles.footer}>
-          <TouchableOpacity 
-            style={styles.cancelButton} 
+          <TouchableOpacity
+            style={styles.cancelButton}
             onPress={() => navigation.goBack()}
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -155,34 +149,30 @@ export default function Form({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* --- Modals & Pickers --- */}
-
-        {/* 1. Date Picker Modal (Conditional Render) */}
         {showDatePicker && (
           <DateTimePicker
             value={date}
             mode="date"
             display="default"
+            maximumDate={new Date()}
             onChange={handleDateChange}
-            maximumDate={new Date()} // Prevent future dates?
           />
         )}
 
-        {/* 2. Custom Type Picker Modal */}
         <Modal
           visible={showTypePicker}
-          transparent={true}
+          transparent
           animationType="fade"
           onRequestClose={() => setShowTypePicker(false)}
         >
-          <TouchableOpacity 
-            style={styles.modalOverlay} 
-            activeOpacity={1} 
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
             onPress={() => setShowTypePicker(false)}
           >
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Select Transaction Type</Text>
-              {['Income', 'Expense'].map((option) => (
+              {['Income', 'Expense'].map(option => (
                 <TouchableOpacity
                   key={option}
                   style={styles.modalOption}
@@ -191,11 +181,15 @@ export default function Form({ route, navigation }) {
                     setShowTypePicker(false);
                   }}
                 >
-                  <Text style={[
-                    styles.modalOptionText,
-                    option === type && styles.modalOptionSelected,
-                    option === 'Income' ? { color: '#10B981' } : { color: '#EF4444' }
-                  ]}>
+                  <Text
+                    style={[
+                      styles.modalOptionText,
+                      option === type && styles.modalOptionSelected,
+                      option === 'Income'
+                        ? { color: '#10B981' }
+                        : { color: '#EF4444' },
+                    ]}
+                  >
                     {option}
                   </Text>
                   {option === type && <Text style={styles.checkMark}>✓</Text>}
@@ -204,11 +198,11 @@ export default function Form({ route, navigation }) {
             </View>
           </TouchableOpacity>
         </Modal>
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F8F9FA' },
