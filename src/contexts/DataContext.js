@@ -1,109 +1,84 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+// 1. Import specific functions from the modular SDK
 import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  orderBy 
-} from 'firebase/firestore';
-import { useAuth } from './AuthContext';
-import { db } from '../firebaseConfig';
+    getFirestore, 
+    collection, 
+    doc, 
+    onSnapshot, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc, 
+    query, 
+    orderBy 
+} from '@react-native-firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
 
 const DataContext = createContext();
 
 export const DataProvider = ({ children }) => {
     const { user } = useAuth();
     const [data, setData] = useState([]);
-    // 1. ADDED: Loading and Error states
-    const [loading, setLoading] = useState(true); 
-    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // 2. Initialize the Firestore instance
+    const db = getFirestore();
 
     useEffect(() => {
-        if (user) {
-            get();
-        } else {
+        if (!user) {
             setData([]);
             setLoading(false);
+            return;
         }
+
+        // 3. Create references and queries using modular functions
+        const transactionsRef = collection(db, 'users', user.uid, 'transactions');
+        const q = query(transactionsRef, orderBy('date', 'desc'));
+
+        // Real-time listener
+        const subscriber = onSnapshot(q, (querySnapshot) => {
+            const transactions = [];
+            
+            querySnapshot.forEach(documentSnapshot => {
+                transactions.push({
+                    ...documentSnapshot.data(),
+                    id: documentSnapshot.id,
+                });
+            });
+            
+            setData(transactions);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching transactions:", error);
+            setLoading(false);
+        });
+
+        // Unsubscribe from events when no longer in use
+        return () => subscriber();
     }, [user]);
 
-    // Helper to sort data by date (descending) locally
-    // This ensures the UI stays sorted even after manual updates without re-fetching
-    const sortData = (items) => {
-        return items.sort((a, b) => {
-             // Assuming 'date' is a Firestore Timestamp or ISO string
-             // If Timestamp: a.date.seconds - b.date.seconds
-             // If String: new Date(a.date) - new Date(b.date)
-             // Generic string compare below (works for ISO strings):
-             return new Date(b.date) - new Date(a.date);
-        });
-    };
-
-    async function get() {
-        setLoading(true);
-        setError(null);
-        try {
-            const q = query(
-                collection(db, 'users', user.uid, 'transactions'),
-                orderBy('date', 'desc')
-            );
-            const snap = await getDocs(q);
-            const fetchedData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            setData(fetchedData);
-        } catch (err) {
-            console.error("Error fetching data:", err);
-            setError("Failed to load transactions.");
-        } finally {
-            setLoading(false);
-        }
-    }
-
     async function save(item) {
-      console.log(item);
-        setError(null);
-        try {
-            const ref = collection(db, 'users', user.uid, 'transactions');
-            const { id, ...payload } = item;
-
-            if (id) {
-                // Update existing
-                await updateDoc(doc(db, 'users', user.uid, 'transactions', id), payload);
-                setData(prev => {
-                    const updatedList = prev.map(i => (i.id === id ? { id, ...payload } : i));
-                    return sortData(updatedList); // Keep it sorted
-                });
-            } else {
-                // Add new
-                const docRef = await addDoc(ref, payload);
-                setData(prev => {
-                    const newList = [{ id: docRef.id, ...payload }, ...prev];
-                    return sortData(newList); // Keep it sorted
-                });
-            }
-        } catch (err) {
-            console.error("Error saving data:", err);
-            setError("Failed to save transaction.");
-            throw err; // Re-throw so the UI component knows it failed
+        const { id, ...payload } = item;
+        
+        // 4. Update Write operations
+        if (id) {
+            // Update existing document
+            const docRef = doc(db, 'users', user.uid, 'transactions', id);
+            await updateDoc(docRef, payload);
+        } else {
+            // Add new document
+            const collectionRef = collection(db, 'users', user.uid, 'transactions');
+            await addDoc(collectionRef, payload);
         }
     }
 
     async function remove(id) {
-        setError(null);
-        try {
-            await deleteDoc(doc(db, 'users', user.uid, 'transactions', id));
-            setData(prev => prev.filter(i => i.id !== id));
-        } catch (err) {
-            console.error("Error deleting data:", err);
-            setError("Failed to delete transaction.");
-        }
+        // 5. Update Delete operation
+        const docRef = doc(db, 'users', user.uid, 'transactions', id);
+        await deleteDoc(docRef);
     }
 
     return (
-        // 2. EXPOSED: loading and error to the value
-        <DataContext.Provider value={{ data, loading, error, save, remove }}>
+        <DataContext.Provider value={{ data, loading, save, remove }}>
             {children}
         </DataContext.Provider>
     );

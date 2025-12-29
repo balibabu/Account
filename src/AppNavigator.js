@@ -40,7 +40,7 @@ function BottomTabs() {
         animation: 'shift',
       }}
     >
-      <Tab.Screen name="Home" component={Home} options={{ title: '🏠 Home' }} />
+      <Tab.Screen name="Home" component={Home} options={{ title: '🏠 Home', headerShown: false }} />
       <Tab.Screen name="Details" component={Details} options={{ title: '📄 Details' }} />
       <Tab.Screen name="Settings" component={Settings} options={{ title: '⚙️ Settings' }} />
     </Tab.Navigator>

@@ -18,12 +18,17 @@ npm install @react-native-async-storage/async-storage
 
 // create firestore database, otherwise it wont work
 
+// upgrading to industry standard [offline storage]
+npm uninstall firebase  
+npm install @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore
 
+// graphs
+npm install react-native-gifted-charts react-native-svg react-native-linear-gradient
 
 ==========================================NEXT STEPS+++++++++++++++++++++++++++++++++++++++++
 -> create login page with firestore integration [done]
 -> store created data in firestore and using useContext  [done]
-
 -> implement update and delete function
 -> create home page to show data summary
+
 -> create settings: logout, change password, and later fingerprint integration for opening app
