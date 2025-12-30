@@ -30,5 +30,10 @@ npm install react-native-gifted-charts react-native-svg react-native-linear-grad
 -> store created data in firestore and using useContext  [done]
 -> implement update and delete function
 -> create home page to show data summary
+-> create settings: logout, change password, and later 
+-> add app icon
 
--> create settings: logout, change password, and later fingerprint integration for opening app
+-> change bottom tabs icons
+use font nunito
+-> back button minimize instead of close
+-> fingerprint integration for opening app

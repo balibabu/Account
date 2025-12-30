@@ -12,6 +12,7 @@ import { useData } from '../../contexts/DataContext';
 import TransactionChart from '../../components/TransactionChart';
 import LineGraph from '../../components/LineGraph';
 import IncomePieChart from '../../components/IncomePieChart';
+import { fonts } from '../../constants';
 
 
 export default function Home() {
@@ -82,7 +83,7 @@ export default function Home() {
       
       {/* --- Header Section --- */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>MoneyTrack</Text>
+        <Text style={styles.headerTitle}>khatabook</Text>
         
         {/* Filter Toggler */}
         <View style={styles.filterContainer}>
@@ -131,9 +132,9 @@ export default function Home() {
           </View>
         </View>
 
-        <TransactionChart data={data} filter={filter} />
-        <LineGraph data={data} filter={filter} />
         <IncomePieChart income={dashboardData.income} expense={dashboardData.expense} />
+        <LineGraph data={data} filter={filter} />
+        <TransactionChart data={data} filter={filter} />
 
 
         {/* --- Recent Transactions --- */}
@@ -203,9 +204,11 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 28,
+    // fontWeight: 'bold',
     marginBottom: 15,
+    letterSpacing:.5,
+    fontFamily: fonts.bold
   },
   filterContainer: {
     flexDirection: 'row',

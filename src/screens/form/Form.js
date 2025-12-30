@@ -1,351 +1,250 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  KeyboardAvoidingView,
-  Modal,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '../../contexts/DataContext';
+import { categories } from '../../constants';
 
+
+// const categories = ['Income', 'Expense'];
 export default function Form({ route, navigation }) {
-  const { id } = route.params || {};
-  const isEditing = !!id;
+    const { data, save } = useData();
+    const { id } = route.params || {};
+    const isEditing = !!id;
 
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [type, setType] = useState('Income');
-  const [description, setDescription] = useState('');
+    const [amount, setAmount] = useState('');
+    const [date, setDate] = useState(new Date());
+    const [description, setDescription] = useState('');
+    const [category, setCategory] = useState(0);
 
-  const { data, save } = useData();
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTypePicker, setShowTypePicker] = useState(false);
 
-  useEffect(() => {
-    console.log(data);
-    if (!isEditing) return;
-    const item = data.find(i => i.id === id);
-    if (!item) return;
+    useEffect(() => {
+        if (!isEditing) return;
+        const item = data.find(i => i.id === id);
+        setAmount(String(item.amount));
+        setDate(new Date(item.date));
+        setCategory(item.category);
+        setDescription(item.description);
+    }, [id, isEditing, data]);
 
-    setAmount(String(item.amount));
-    setDate(new Date(item.date));
-    setType(item.type);
-    setDescription(item.description);
-  }, [id, isEditing, data]);
+    const handleDateChange = (_, selectedDate) => {
+        if (selectedDate) setDate(selectedDate);
+        setShowDatePicker(false);
+    };
+    const handleSave = () => {
+        save({ id, amount: Number(amount), date: date.toISOString(), category, description });
+        navigation.goBack();
+    };
+    const formatDate = d => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const handleDateChange = (_, selectedDate) => {
-    if (selectedDate) setDate(selectedDate);
-    setShowDatePicker(false);
-  };
+    return (
+        <SafeAreaView style={styles.safeArea}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>{isEditing ? 'Edit Transaction' : 'New Transaction'}</Text>
+                </View>
 
-  const handleSave = () => {
-    save({
-      id,
-      amount: Number(amount),
-      date: date.toISOString(),
-      type,
-      description,
-    });
-    navigation.goBack();
-  };
+                <ScrollView contentContainerStyle={styles.formContainer}>
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Amount</Text>
+                        <View style={styles.amountContainer}>
+                            <Text style={styles.currencySymbol}>Rs</Text>
+                            <TextInput keyboardType="numeric" style={styles.amountInput} value={amount} onChangeText={setAmount} />
+                        </View>
+                    </View>
 
-  const formatDate = d =>
-    d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    <View style={styles.row}>
+                        <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                            <Text style={styles.label}>Category</Text>
+                            <TouchableOpacity style={styles.selector} onPress={() => setCategory(prev => (prev + 1) % categories.length)}>
+                                <Text style={category == 0 ? styles.textSuccess : styles.textDanger}>
+                                    {categories[category % categories.length]}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            {isEditing ? 'Edit Transaction' : 'New Transaction'}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {isEditing ? `Updating ID: #${id}` : 'Enter details below'}
-          </Text>
-        </View>
+                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
+                            <Text style={styles.label}>Date</Text>
+                            <TouchableOpacity style={styles.selector} onPress={() => setShowDatePicker(true)}>
+                                <Text style={styles.selectorText}>{formatDate(date)}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
 
-        <ScrollView contentContainerStyle={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Amount</Text>
-            <View style={styles.amountContainer}>
-              <Text style={styles.currencySymbol}>$</Text>
-              <TextInput
-                style={styles.amountInput}
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="0.00"
-                placeholderTextColor="#A0A0A0"
-              />
-            </View>
-          </View>
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Description</Text>
+                        <TextInput
+                            style={styles.textArea}
+                            multiline
+                            textAlignVertical="top"
+                            value={description}
+                            onChangeText={setDescription}
+                            placeholder="What is this transaction for?"
+                            placeholderTextColor="#A0A0A0"
+                        />
+                    </View>
+                </ScrollView>
 
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-              <Text style={styles.label}>Type</Text>
-              <TouchableOpacity
-                style={styles.selector}
-                onPress={() => setShowTypePicker(true)}
-              >
-                <Text
-                  style={[
-                    styles.selectorText,
-                    type === 'Income' ? styles.textSuccess : styles.textDanger,
-                  ]}
-                >
-                  {type}
-                </Text>
-                <Text style={styles.dropdownIcon}>▼</Text>
-              </TouchableOpacity>
-            </View>
+                <View style={styles.footer}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
 
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-              <Text style={styles.label}>Date</Text>
-              <TouchableOpacity
-                style={styles.selector}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={styles.selectorText}>{formatDate(date)}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={styles.textArea}
-              multiline
-              textAlignVertical="top"
-              value={description}
-              onChangeText={setDescription}
-              placeholder="What is this transaction for?"
-              placeholderTextColor="#A0A0A0"
-            />
-          </View>
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
-            <Text style={styles.submitButtonText}>
-              {isEditing ? 'Update Entry' : 'Save Entry'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            maximumDate={new Date()}
-            onChange={handleDateChange}
-          />
-        )}
-
-        <Modal
-          visible={showTypePicker}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowTypePicker(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowTypePicker(false)}
-          >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Select Transaction Type</Text>
-              {['Income', 'Expense'].map(option => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.modalOption}
-                  onPress={() => {
-                    setType(option);
-                    setShowTypePicker(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.modalOptionText,
-                      option === type && styles.modalOptionSelected,
-                      option === 'Income'
-                        ? { color: '#10B981' }
-                        : { color: '#EF4444' },
-                    ]}
-                  >
-                    {option}
-                  </Text>
-                  {option === type && <Text style={styles.checkMark}>✓</Text>}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+                    <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
+                        <Text style={styles.submitButtonText}>{isEditing ? 'Update Entry' : 'Save Entry'}</Text>
+                    </TouchableOpacity>
+                </View>
+                {showDatePicker && <DateTimePicker maximumDate={new Date()} value={date} onChange={handleDateChange} />}
+            </KeyboardAvoidingView>
+        </SafeAreaView>
+    );
 }
 
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F8F9FA' },
-  container: { flex: 1 },
-  
-  // Header
-  header: {
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
-  headerSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
+    safeArea: { flex: 1, backgroundColor: '#F8F9FA' },
+    container: { flex: 1 },
 
-  // Form
-  formContainer: {
-    padding: 24,
-    flexGrow: 1,
-  },
-  inputGroup: { marginBottom: 20 },
-  row: { flexDirection: 'row', justifyContent: 'space-between' },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  
-  // Specific Inputs
-  amountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    // Shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  currencySymbol: { fontSize: 20, color: '#9CA3AF', marginRight: 8, fontWeight: '600' },
-  amountInput: { fontSize: 24, fontWeight: '700', color: '#111827', flex: 1 },
+    // Header
+    header: {
+        paddingHorizontal: 24,
+        paddingVertical: 20,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+    },
+    headerTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
+    headerSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
 
-  selector: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  selectorText: { fontSize: 16, color: '#111827', fontWeight: '500' },
-  dropdownIcon: { fontSize: 12, color: '#6B7280' },
-  
-  textArea: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#111827',
-    flex: 1, // Takes up remaining space
-    minHeight: 120, // Minimum height for textarea look
-  },
+    // Form
+    formContainer: {
+        padding: 24,
+        flexGrow: 1,
+    },
+    inputGroup: { marginBottom: 20 },
+    row: { flexDirection: 'row', justifyContent: 'space-between' },
+    label: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
 
-  // Type Colors
-  textSuccess: { color: '#10B981' },
-  textDanger: { color: '#EF4444' },
+    // Specific Inputs
+    amountContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        // Shadow
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    currencySymbol: { fontSize: 20, color: '#9CA3AF', marginRight: 8, fontWeight: '600' },
+    amountInput: { fontSize: 24, fontWeight: '700', color: '#111827', flex: 1 },
 
-  // Footer Actions
-  footer: {
-    padding: 24,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  cancelButtonText: { fontSize: 16, fontWeight: '600', color: '#374151' },
-  
-  submitButton: {
-    flex: 1,
-    marginLeft: 16,
-    backgroundColor: '#4F46E5', // Indigo Primary
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: "#4F46E5",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  submitButtonText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+    selector: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    selectorText: { fontSize: 16, color: '#111827', fontWeight: '500' },
+    dropdownIcon: { fontSize: 12, color: '#6B7280' },
 
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16, color: '#111827' },
-  modalOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  modalOptionText: { fontSize: 16, fontWeight: '500' },
-  modalOptionSelected: { fontWeight: '700' },
-  checkMark: { fontSize: 16, color: '#4F46E5', fontWeight: 'bold' },
+    textArea: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 12,
+        padding: 16,
+        fontSize: 16,
+        color: '#111827',
+        flex: 1, // Takes up remaining space
+        minHeight: 120, // Minimum height for textarea look
+    },
+
+    // Type Colors
+    textSuccess: { color: '#10B981', fontSize: 16, fontWeight: 'bold' },
+    textDanger: { color: '#EF4444', fontSize: 16, fontWeight: 'bold' },
+
+    // Footer Actions
+    footer: {
+        padding: 24,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    cancelButton: {
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+    },
+    cancelButtonText: { fontSize: 16, fontWeight: '600', color: '#374151' },
+
+    submitButton: {
+        flex: 1,
+        marginLeft: 16,
+        backgroundColor: '#4F46E5', // Indigo Primary
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        shadowColor: "#4F46E5",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    submitButtonText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16, color: '#111827' },
+    modalOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    modalOptionText: { fontSize: 16, fontWeight: '500' },
+    modalOptionSelected: { fontWeight: '700' },
+    checkMark: { fontSize: 16, color: '#4F46E5', fontWeight: 'bold' },
 });

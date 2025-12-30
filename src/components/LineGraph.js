@@ -7,7 +7,7 @@ export default function LineGraph({ data, filter }) {
     const groupedData = {};
     const now = new Date();
 
-    data.forEach(item => {
+    [...data].reverse().forEach(item => {
       const date = new Date(item.date);
       let match = false;
       if (filter === 'Yearly') match = date.getFullYear() === now.getFullYear();

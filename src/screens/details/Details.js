@@ -13,6 +13,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '../../contexts/DataContext';
+import { fonts } from '../../constants';
 
 export default function DetailsScreen({ navigation }) {
   const { data, remove } = useData();
@@ -131,7 +132,13 @@ export default function DetailsScreen({ navigation }) {
 
         <TouchableOpacity
           style={[styles.filterButton, showFilters && styles.filterButtonActive]}
-          onPress={() => setShowFilters(v => !v)}
+          onPress={() => setShowFilters(v => {
+            if(v){
+              setFromDate(null);
+              setToDate(null);
+            }
+            return !v;
+          })}
         >
           <Text style={[styles.filterIcon, showFilters && { color: '#fff' }]}>
             ⚙️
@@ -221,7 +228,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12, // Compact
     backgroundColor: '#fff',
   },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  headerTitle: { 
+    fontSize: 30, 
+    // fontWeight: '800', 
+    color: '#4F46E5',
+    letterSpacing:.5,
+    fontFamily: fonts.bold
+   },
   addButton: {
     backgroundColor: '#4F46E5',
     paddingHorizontal: 14,
