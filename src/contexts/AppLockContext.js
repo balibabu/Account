@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { deleteData, loadData, saveData } from '../utils/storageHelper';
 import triggerBiometricAuth from '../utils/biometric';
 import MyIndicator from '../components/MyIndicator';
-import { Alert } from 'react-native';
+import { Alert, AppState } from 'react-native';
 import AppLockAuthScreen from '../screens/login/AppLockAuthScreen';
 
 const AppLockContext = createContext();
@@ -14,6 +14,10 @@ export const AppLockProvider = ({ children }) => {
 
     useEffect(() => {
         checkAppLockStatus();
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState !== 'active') setIsUserAuthenticated(false);
+        });
+        return () => subscription.remove();
     }, []);
 
 

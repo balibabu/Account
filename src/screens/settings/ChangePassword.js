@@ -1,285 +1,81 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../contexts/AuthContext';
+import { fonts } from '../../constants';
 
 export default function ChangePassword() {
     const { changePassword } = useAuth();
-
-    const [pwdModalVisible, setPwdModalVisible] = useState(false);
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    const [isVisible, setIsVisible] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({ current: '', next: '', confirm: '' });
 
-    const handleChangePassword = async () => {
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            Alert.alert('Error', 'Please fill in all fields');
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'New passwords do not match');
-            return;
-        }
-        if (newPassword.length < 6) {
-            Alert.alert('Error', 'Password should be at least 6 characters');
-            return;
-        }
+    const handleUpdate = async () => {
+        const { current, next, confirm } = form;
+        if (!current || !next || !confirm) return Alert.alert('Error', 'Fill all fields');
+        if (next !== confirm) return Alert.alert('Error', 'Passwords do not match');
+        if (next.length < 6) return Alert.alert('Error', 'Too short (min 6 chars)');
 
         setLoading(true);
         try {
-            await changePassword(currentPassword, newPassword);
-            Alert.alert('Success', 'Password updated successfully!');
-            setPwdModalVisible(false);
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-        } catch (error) {
-            if (error.code === 'auth/wrong-password') {
-                Alert.alert('Error', 'Current password is incorrect.');
-            } else {
-                Alert.alert('Error', error.message);
-            }
-        } finally {
-            setLoading(false);
-        }
+            await changePassword(current, next);
+            Alert.alert('Success', 'Password updated!');
+            setIsVisible(false);
+            setForm({ current: '', next: '', confirm: '' });
+        } catch (e) {
+            Alert.alert('Error', e.code === 'auth/wrong-password' ? 'Wrong current password' : e.message);
+        } finally { setLoading(false); }
     };
+
     return (
         <>
-            <TouchableOpacity style={styles.menuItem} onPress={() => setPwdModalVisible(true)}>
-                <View style={styles.iconContainer}>
-                    <Text style={styles.icon}>🔑</Text>
-                </View>
+            <TouchableOpacity style={styles.menuItem} onPress={() => setIsVisible(true)} activeOpacity={0.7}>
+                <View style={styles.iconContainer}><Icon name="key-outline" size={22} color="#2563eb" /></View>
                 <Text style={styles.menuText}>Change Password</Text>
+                <Icon name="chevron-forward" size={18} color="#cbd5e1" />
             </TouchableOpacity>
 
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={pwdModalVisible}
-                onRequestClose={() => setPwdModalVisible(false)}
-            >
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.modalOverlay}
-                >
+            <Modal animationType="fade" transparent visible={isVisible} onRequestClose={() => setIsVisible(false)}>
+                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Change Password</Text>
-
+                        
                         <Text style={styles.label}>Current Password</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Current password"
-                            value={currentPassword}
-                            onChangeText={setCurrentPassword}
-                            secureTextEntry
-                        />
+                        <TextInput style={styles.input} secureTextEntry value={form.current} onChangeText={t => setForm({...form, current: t})} placeholder="••••••••" />
 
                         <Text style={styles.label}>New Password</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="New password (min 6 chars)"
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                            secureTextEntry
-                        />
+                        <TextInput style={styles.input} secureTextEntry value={form.next} onChangeText={t => setForm({...form, next: t})} placeholder="Min 6 characters" />
 
-                        <Text style={styles.label}>Confirm New Password</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Retype new password"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry
-                        />
+                        <Text style={styles.label}>Confirm Password</Text>
+                        <TextInput style={styles.input} secureTextEntry value={form.confirm} onChangeText={t => setForm({...form, confirm: t})} placeholder="Retype new password" />
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={[styles.modalBtn, styles.cancelBtn]} onPress={() => setPwdModalVisible(false)}>
+                            <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsVisible(false)}>
                                 <Text style={styles.btnTextCancel}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.modalBtn, styles.saveBtn]} onPress={handleChangePassword} disabled={loading}>
-                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnTextSave}>Update</Text>}
+                            <TouchableOpacity style={styles.saveBtn} onPress={handleUpdate} disabled={loading}>
+                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnTextSave}>Update Password</Text>}
                             </TouchableOpacity>
                         </View>
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
         </>
-    )
+    );
 }
 
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F3F4F6',
-    },
-    header: {
-        alignItems: 'center',
-        paddingVertical: 30,
-        backgroundColor: '#fff',
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
-        marginBottom: 20,
-    },
-    avatarContainer: {
-        width: 90,
-        height: 90,
-        borderRadius: 45,
-        backgroundColor: '#4a148c',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 15,
-    },
-    avatarText: {
-        fontSize: 36,
-        color: '#fff',
-        fontWeight: 'bold',
-    },
-    nameEditContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 5,
-    },
-    username: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    editIcon: {
-        fontSize: 18,
-        color: '#4a148c',
-        marginLeft: 8,
-    },
-    email: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 5,
-    },
-    menuContainer: {
-        paddingHorizontal: 20,
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 15,
-        marginBottom: 15,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-        elevation: 2,
-    },
-    iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        backgroundColor: '#F3E5F5',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 15,
-    },
-    icon: {
-        fontSize: 18,
-    },
-    menuText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        flex: 1,
-    },
-    arrow: {
-        fontSize: 20,
-        color: '#ccc',
-        fontWeight: 'bold',
-    },
-    logoutItem: {
-        marginTop: 10,
-    },
-    logoutText: {
-        color: '#FF5252',
-    },
-    logoutIconBg: {
-        backgroundColor: '#FFEBEE',
-    },
-    footerContainer: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        paddingBottom: 20,
-        marginTop: 20,
-    },
-    footerText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#999',
-        opacity: 0.2,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        width: '85%',
-        backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 25,
-        elevation: 5,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    label: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 5,
-        marginLeft: 5,
-    },
-    input: {
-        backgroundColor: '#F3F4F6',
-        borderRadius: 10,
-        padding: 12,
-        marginBottom: 15,
-        fontSize: 16,
-        color: '#333',
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 10,
-    },
-    modalBtn: {
-        flex: 1,
-        padding: 15,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    cancelBtn: {
-        backgroundColor: '#F3F4F6',
-        marginRight: 10,
-    },
-    saveBtn: {
-        backgroundColor: '#4a148c',
-        marginLeft: 10,
-    },
-    btnTextCancel: {
-        color: '#333',
-        fontWeight: 'bold',
-    },
-    btnTextSave: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
+    menuItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 16, marginBottom: 12, elevation: 3 },
+    iconContainer: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+    menuText: { fontSize: 16, fontFamily: fonts.bold, color: '#1e293b', flex: 1 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'center', padding: 24 },
+    modalContent: { backgroundColor: '#fff', borderRadius: 24, padding: 24, elevation: 10 },
+    modalTitle: { fontSize: 22, fontFamily: fonts.bold, color: '#1e293b', marginBottom: 20 },
+    label: { fontSize: 13, fontFamily: fonts.bold, color: '#64748b', marginBottom: 6, textTransform: 'uppercase' },
+    input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 12, padding: 12, marginBottom: 16, color: '#1e293b', fontSize: 15 },
+    modalButtons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginTop: 10, gap: 15 },
+    cancelBtn: { paddingVertical: 10, paddingHorizontal: 10 },
+    saveBtn: { backgroundColor: '#2563eb', paddingVertical: 14, paddingHorizontal: 20, borderRadius: 12, flex: 1, alignItems: 'center', elevation: 2 },
+    btnTextCancel: { color: '#94a3b8', fontFamily: fonts.bold, fontSize: 15 },
+    btnTextSave: { color: '#fff', fontFamily: fonts.bold, fontSize: 15 }
 });

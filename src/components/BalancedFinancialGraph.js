@@ -4,17 +4,10 @@ import { LineChart } from 'react-native-gifted-charts';
 
 const { width } = Dimensions.get('window');
 
-const BalancedFinancialGraph = () => {
-    const [activeLine, setActiveLine] = useState('all');
+const BalancedFinancialGraph = ({ data }) => {
+    // const [activeLine, setActiveLine] = useState('all');
 
-    const rawData = [
-        { amount: 100, type: 0, date: '2023-12-01' },
-        { amount: 150, type: 1, date: '2023-12-01' },
-        { amount: 50, type: 0, date: '2023-12-02' },
-        { amount: 50, type: 1, date: '2023-12-03' },
-        { amount: 200, type: 0, date: '2023-12-04' },
-        { amount: 100, type: 1, date: '2023-12-05' },
-    ];
+
 
     const chartData = useMemo(() => {
         let cumIncome = 0;
@@ -23,9 +16,10 @@ const BalancedFinancialGraph = () => {
         const incomeData = [];
         const expenseData = [];
         const netData = [];
+        const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        rawData.forEach((item, index) => {
-            if (item.type === 0) cumIncome += item.amount;
+        sortedData.forEach((item, index) => {
+            if (item.category === 0) cumIncome += item.amount;
             else cumExpense -= item.amount; // Accumulate as negative
 
             const dateLabel = new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -40,56 +34,35 @@ const BalancedFinancialGraph = () => {
         const maxVal = Math.max(...allValues, 100);
 
         return { incomeData, expenseData, netData, maxVal };
-    }, [rawData]);
-
-    const getLineColor = (type, baseColor) => {
-        const isDimmed = activeLine !== 'all' && activeLine !== type;
-        return isDimmed ? `${baseColor}33` : baseColor; // Appends 33 for 20% opacity in hex
-    };
+    }, [data]);
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Accumulative Cashflow</Text>
-
-            {/* Selector */}
-            <View style={styles.selector}>
-                {['income', 'expense', 'net', 'all'].map(type => (
-                    <TouchableOpacity
-                        key={type}
-                        onPress={() => setActiveLine(type)}
-                        style={[styles.chip, activeLine === type && styles.chipActive]}
-                    >
-                        <Text style={[styles.chipText, activeLine === type && { color: '#fff' }]}>
-                            {type.toUpperCase()}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
 
             <LineChart
                 dataSet={[
                     {
                         data: chartData.incomeData,
-                        color: getLineColor('income', '#22c55e'), // Green
+                        color: '#22c55e', // Green
                         thickness: 3,
                     },
                     {
                         data: chartData.expenseData,
-                        color: getLineColor('expense', '#ef4444'), // Red
+                        color: '#ef4444', // Red
                         thickness: 3,
                     },
                     {
                         data: chartData.netData,
-                        color: getLineColor('net', '#3b82f6'), // Blue
+                        color: '#3b82f6', // Blue
                         thickness: 4,
                     },
                 ]}
                 isAnimated                  // Animates the first time it loads
-  animationDuration={1500}     // Makes the drawing slow and elegant
-  animateOnDataChange         // Smooth transition when you filter/change data
-  onDataChangeAnimationDuration={400} 
-  animationType="timing" 
-  
+                animationDuration={1500}     // Makes the drawing slow and elegant
+                animateOnDataChange         // Smooth transition when you filter/change data
+                onDataChangeAnimationDuration={400}
+                animationType="timing"
+
                 // Crucial props for centered X-Axis:
                 maxValue={chartData.maxVal}
                 mostNegativeValue={-chartData.maxVal}
@@ -150,7 +123,7 @@ const BalancedFinancialGraph = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#f9f9f9', alignItems: 'center' },
+    container: { flex: 1, padding: 20, backgroundColor: '#fff', alignItems: 'center' },
     header: { fontSize: 20, fontWeight: '700', marginVertical: 20, color: '#1a1a1a' },
     selector: { flexDirection: 'row', gap: 10, marginBottom: 30 },
     chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd' },

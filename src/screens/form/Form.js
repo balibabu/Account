@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '../../contexts/DataContext';
 import { categories } from '../../constants';
+import FocusAwareStatusBar from '../../components/FocusAwareStatusBar';
 
 
-// const categories = ['Income', 'Expense'];
 export default function Form({ route, navigation }) {
     const { data, save } = useData();
     const { id } = route.params || {};
@@ -21,6 +21,7 @@ export default function Form({ route, navigation }) {
 
 
     useEffect(() => {
+        console.log(data);
         if (!isEditing) return;
         const item = data.find(i => i.id === id);
         setAmount(String(item.amount));
@@ -34,6 +35,8 @@ export default function Form({ route, navigation }) {
         setShowDatePicker(false);
     };
     const handleSave = () => {
+        if (!amount || isNaN(amount) || Number(amount) <= 0) return Alert.alert("Error", "Please enter a valid amount");
+        if (!description.trim()) return Alert.alert("Error", "Please enter a description");
         save({ id, amount: Number(amount), date: date.toISOString(), category, description });
         navigation.goBack();
     };
@@ -41,63 +44,62 @@ export default function Form({ route, navigation }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>{isEditing ? 'Edit Transaction' : 'New Transaction'}</Text>
+            <FocusAwareStatusBar barStyle="dark-content" backgroundColor="#fff" />
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>{isEditing ? 'Edit Transaction' : 'New Transaction'}</Text>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.formContainer}>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Amount</Text>
+                    <View style={styles.amountContainer}>
+                        <Text style={styles.currencySymbol}>Rs</Text>
+                        <TextInput keyboardType="numeric" style={styles.amountInput} value={amount} onChangeText={setAmount} />
+                    </View>
                 </View>
 
-                <ScrollView contentContainerStyle={styles.formContainer}>
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Amount</Text>
-                        <View style={styles.amountContainer}>
-                            <Text style={styles.currencySymbol}>Rs</Text>
-                            <TextInput keyboardType="numeric" style={styles.amountInput} value={amount} onChangeText={setAmount} />
-                        </View>
+                <View style={styles.row}>
+                    <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                        <Text style={styles.label}>Category</Text>
+                        <TouchableOpacity style={styles.selector} onPress={() => setCategory(prev => (prev + 1) % categories.length)}>
+                            <Text style={category == 0 ? styles.textSuccess : styles.textDanger}>
+                                {categories[category % categories.length]}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
 
-                    <View style={styles.row}>
-                        <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                            <Text style={styles.label}>Category</Text>
-                            <TouchableOpacity style={styles.selector} onPress={() => setCategory(prev => (prev + 1) % categories.length)}>
-                                <Text style={category == 0 ? styles.textSuccess : styles.textDanger}>
-                                    {categories[category % categories.length]}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-                            <Text style={styles.label}>Date</Text>
-                            <TouchableOpacity style={styles.selector} onPress={() => setShowDatePicker(true)}>
-                                <Text style={styles.selectorText}>{formatDate(date)}</Text>
-                            </TouchableOpacity>
-                        </View>
+                    <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
+                        <Text style={styles.label}>Date</Text>
+                        <TouchableOpacity style={styles.selector} onPress={() => setShowDatePicker(true)}>
+                            <Text style={styles.selectorText}>{formatDate(date)}</Text>
+                        </TouchableOpacity>
                     </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Description</Text>
-                        <TextInput
-                            style={styles.textArea}
-                            multiline
-                            textAlignVertical="top"
-                            value={description}
-                            onChangeText={setDescription}
-                            placeholder="What is this transaction for?"
-                            placeholderTextColor="#A0A0A0"
-                        />
-                    </View>
-                </ScrollView>
-
-                <View style={styles.footer}>
-                    <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-                        <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
-                        <Text style={styles.submitButtonText}>{isEditing ? 'Update Entry' : 'Save Entry'}</Text>
-                    </TouchableOpacity>
                 </View>
-                {showDatePicker && <DateTimePicker maximumDate={new Date()} value={date} onChange={handleDateChange} />}
-            </KeyboardAvoidingView>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Description</Text>
+                    <TextInput
+                        style={styles.textArea}
+                        multiline
+                        textAlignVertical="top"
+                        value={description}
+                        onChangeText={setDescription}
+                        placeholder="What is this transaction for?"
+                        placeholderTextColor="#A0A0A0"
+                    />
+                </View>
+            </ScrollView>
+
+            <View style={styles.footer}>
+                <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
+                    <Text style={styles.submitButtonText}>{isEditing ? 'Update Entry' : 'Save Entry'}</Text>
+                </TouchableOpacity>
+            </View>
+            {showDatePicker && <DateTimePicker maximumDate={new Date()} value={date} onChange={handleDateChange} />}
         </SafeAreaView>
     );
 }
@@ -105,7 +107,6 @@ export default function Form({ route, navigation }) {
 
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: '#F8F9FA' },
-    container: { flex: 1 },
 
     // Header
     header: {
@@ -116,7 +117,6 @@ const styles = StyleSheet.create({
         borderBottomColor: '#E5E7EB',
     },
     headerTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
-    headerSubtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
 
     // Form
     formContainer: {
@@ -217,34 +217,4 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     submitButtonText: { fontSize: 16, fontWeight: '700', color: '#fff' },
-
-    // Modal Styles
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        width: '80%',
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16, color: '#111827' },
-    modalOption: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 14,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
-    },
-    modalOptionText: { fontSize: 16, fontWeight: '500' },
-    modalOptionSelected: { fontWeight: '700' },
-    checkMark: { fontSize: 16, color: '#4F46E5', fontWeight: 'bold' },
 });

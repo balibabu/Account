@@ -1,29 +1,22 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ActivityIndicator, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../contexts/AuthContext';
 import { fonts } from '../../constants';
-
 
 export default function LoginScreen() {
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
-
     const handlePress = async () => {
-        if (!email || !password) {
-            Alert.alert("Error", "Please enter both email and password");
-            return;
-        }
+        if (!email || !password) return Alert.alert("Error", "Please enter credentials");
         setLoading(true);
-        try {
-            await login(email, password);
-        } catch (error) {
-            Alert.alert("Login Failed", error.message);
-        } finally {
-            setLoading(false);
-        }
+        try { await login(email, password); } 
+        catch (e) { Alert.alert("Login Failed", e.message); } 
+        finally { setLoading(false); }
     };
 
     return (
@@ -31,151 +24,45 @@ export default function LoginScreen() {
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
                 <View style={styles.headerContainer}>
                     <Text style={styles.welcomeText}>Welcome Back</Text>
-                    <Text style={styles.subText}>Sign in to continue</Text>
+                    <Text style={styles.subText}>Sign in to manage your khatabook</Text>
                 </View>
+
                 <View style={styles.formContainer}>
                     <View style={styles.fieldWrapper}>
-                        <Text style={styles.floatingLabel}>Email</Text>
-                        <TextInput style={styles.floatingInput} placeholder="user@example.com" placeholderTextColor="#aaa" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                        <Text style={styles.floatingLabel}>Email Address</Text>
+                        <TextInput style={styles.floatingInput} placeholder="name@example.com" placeholderTextColor="#cbd5e1" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                     </View>
+
                     <View style={styles.fieldWrapper}>
                         <Text style={styles.floatingLabel}>Password</Text>
-                        <TextInput style={styles.floatingInput} placeholder="**********" placeholderTextColor="#aaa" value={password} onChangeText={setPassword} secureTextEntry />
+                        <View style={styles.passwordInputWrapper}>
+                            <TextInput style={[styles.floatingInput, { flex: 1, borderWidth: 0 }]} placeholder="••••••••" placeholderTextColor="#cbd5e1" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                                <Icon name={showPassword ? "eye-outline" : "eye-off-outline"} size={22} color="#94A3B8" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <TouchableOpacity style={styles.button} onPress={handlePress} disabled={loading}>
-                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log In</Text>}
+
+                    <TouchableOpacity style={styles.button} onPress={handlePress} disabled={loading} activeOpacity={0.8}>
+                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign In</Text>}
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
     );
-};
+}
 
 const styles = StyleSheet.create({
-    fieldWrapper: {
-        position: 'relative',
-        marginBottom: 24,
-        paddingTop: 10,
-    },
-    
-    floatingLabel: {
-        position: 'absolute',
-        top: 0,
-        left: 18,
-        backgroundColor: '#f5f7fa', // same as input bg
-        paddingHorizontal: 6,
-        fontSize: 14,
-        color: '#777',
-        zIndex: 10,
-        fontFamily: fonts.light
-    },
-    
-    floatingInput: {
-        height: 56,
-        borderRadius: 16,
-        backgroundColor: '#f5f7fa',
-        paddingHorizontal: 16,
-        fontSize: 18,
-        color: '#333',
-    
-        borderWidth: 1,
-        borderColor: '#d6dbe2',
-    },
-    
-    container: {
-        flex: 1,
-        backgroundColor: '#B9DDFF', // Softer, modern background
-        justifyContent: 'center',
-        paddingHorizontal: 24,
-    },
-    
-    headerContainer: {
-        marginBottom: 45,
-        alignItems: 'center',
-    },
-    
-    welcomeText: {
-        fontSize: 34,
-        // fontWeight: '800',
-        color: '#1E293B', // Dark slate
-        marginBottom: 8,
-        fontFamily: fonts.bold
-    },
-    
-    subText: {
-        fontSize: 16,
-        color: '#64748B', // Soft gray-blue
-    },
-    
-    subText: {
-        fontSize: 16,
-        color: '#666',
-    },
-    formContainer: {
-        backgroundColor: '#F6F6F6',
-        padding: 28,
-        borderRadius: 24,
-    
-        // iOS shadow (more depth)
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.12,
-        shadowRadius: 20,
-    
-        // Android elevation
-        elevation: 10,
-    },
-    
-    inputContainer: {
-        marginBottom: 18,
-    },
-    
-    label: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#475569',
-        marginBottom: 6,
-    },
-    
-    input: {
-        height: 52,
-        backgroundColor: '#EDEDED',
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        color: '#0F172A',
-    
-        borderWidth: 1,
-        borderColor: '#CBD5E1',
-    
-        // Creates inset illusion
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 2,
-    },
-    
-    button: {
-        backgroundColor: '#4A90E2',
-        height: 56,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 3,
-    
-        // shadowColor: '#E8E8E8',
-        // shadowOffset: { width: 0, height: 6 },
-        // shadowOpacity: 0.35,
-        // shadowRadius: 10,
-        elevation: 4,
-    },
-    
-    buttonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '700',
-        letterSpacing: 0.5,
-    },
-    
+    container: { flex: 1, backgroundColor: '#B9DDFF', justifyContent: 'center', paddingHorizontal: 24 },
+    headerContainer: { marginBottom: 40, alignItems: 'center' },
+    welcomeText: { fontSize: 34, color: '#1E293B', fontFamily: fonts.bold, marginBottom: 4 },
+    subText: { fontSize: 16, color: '#475569', fontFamily: fonts.regular },
+    formContainer: { backgroundColor: '#FFFFFF', padding: 28, borderRadius: 30, elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20 },
+    fieldWrapper: { position: 'relative', marginBottom: 20 },
+    floatingLabel: { position: 'absolute', top: -10, left: 15, backgroundColor: '#FFFFFF', paddingHorizontal: 6, fontSize: 12, color: '#64748B', zIndex: 10, fontFamily: fonts.bold, textTransform: 'uppercase' },
+    floatingInput: { height: 56, borderRadius: 12, backgroundColor: 'transparent', paddingHorizontal: 16, fontSize: 16, color: '#1E293B', borderWidth: 1.5, borderColor: '#E2E8F0', fontFamily: fonts.regular },
+    passwordInputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 12 },
+    eyeIcon: { paddingHorizontal: 15 },
+    button: { backgroundColor: '#4A90E2', height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 10, elevation: 4, shadowColor: '#4A90E2', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 }, shadowRadius: 8 },
+    buttonText: { color: '#FFFFFF', fontSize: 17, fontFamily: fonts.bold, letterSpacing: 0.5 }
 });
-

@@ -5,12 +5,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import AppLockSetup from './AppLockSetup'
 import ChangePassword from './ChangePassword';
 import SignOut from './SignOut';
+import FocusAwareStatusBar from '../../components/FocusAwareStatusBar';
 
 export default function SettingsScreen() {
     const { user } = useAuth();
 
     return (
         <SafeAreaView style={styles.container}>
+            <FocusAwareStatusBar barStyle="dark-content" backgroundColor="#fff" />
+
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={styles.header}>
                     <View style={styles.avatarContainer}>

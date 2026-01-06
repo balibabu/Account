@@ -1,9 +1,5 @@
+????????? DO NOT MAKE ANY UI CHANGES / JUST ORGANIZE THE CODE / MAKE IT MODULAR ????????
 
--> use icons [fix this first]
-
--> change bottom tabs icons
-- show toggle buttons in setting to turn on off graphs [use firestore to store states]
--> create a state storing context 
 
 ========================================== completed STEPS +++++++++++++++++++++++++++++++++++++++++
 
@@ -17,6 +13,9 @@
 -> fingerprint integration for opening app
 -> shortcut pin
 -> stock market style graph
+-> use icons
+-> change bottom tabs icons
+-> donot submit empty form
 
 
 
@@ -54,5 +53,3 @@ npm install react-native-biometrics @react-native-async-storage/async-storage
 
 //icons 
 npm install react-native-vector-icons
-
-
