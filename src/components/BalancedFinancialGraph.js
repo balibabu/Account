@@ -1,170 +1,114 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 
-const { width } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const BalancedFinancialGraph = ({ data }) => {
-    // const [activeLine, setActiveLine] = useState('all');
-
-
-
     const chartData = useMemo(() => {
-        let cumIncome = 0;
-        let cumExpense = 0; // We will treat this as negative for the graph
+        let cumInc = 0, cumExp = 0;
+        const income = [], expense = [], net = [];
+        const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        const incomeData = [];
-        const expenseData = [];
-        const netData = [];
-        const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const fmt = (v) => String(Math.abs(Math.round(v)));
 
-        sortedData.forEach((item, index) => {
-            if (item.category === 0) cumIncome += item.amount;
-            else cumExpense -= item.amount; // Accumulate as negative
+        sorted.forEach((item) => {
+            if (item.category === 0) cumInc += item.amount; else cumExp -= item.amount;
+            const lbl = new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
-            const dateLabel = new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-
-            incomeData.push({ value: cumIncome, label: index % 2 === 0 ? dateLabel : '' });
-            expenseData.push({ value: cumExpense });
-            netData.push({ value: cumIncome + cumExpense }); // Income (pos) + Expense (neg) = Net
+            // Push objects with text properties INSIDE the data point
+            income.push({ 
+                value: cumInc, 
+                label: lbl, 
+                dataPointsText: fmt(cumInc),
+                textColor: '#16a34a',
+                textFontSize: 8,
+                textShiftY: -10, // Float Up
+            });
+            expense.push({ 
+                value: cumExp, 
+                dataPointsText: fmt(cumExp),
+                textColor: '#dc2626',
+                textFontSize: 8,
+                textShiftY: 10, // Float Down
+            });
+            net.push({ 
+                value: cumInc + cumExp, 
+                dataPointsText: fmt(cumInc + cumExp),
+                textColor: '#2563eb',
+                textFontSize: 9,
+                fontWeight: 'bold',
+                textShiftY: -15, // Float Higher
+            });
         });
 
-        // Find the max absolute value to balance the Y-axis
-        const allValues = [...incomeData, ...expenseData, ...netData].map(d => Math.abs(d.value));
-        const maxVal = Math.max(...allValues, 100);
-
-        return { incomeData, expenseData, netData, maxVal };
+        const max = Math.max(...income.map(d => d.value), ...expense.map(d => Math.abs(d.value)), 100);
+        return { income, expense, net, maxVal: max };
     }, [data]);
 
-    return (
-        <View style={styles.container}>
+    if (!data || data.length === 0) return <View style={styles.emptyWrap}><Text style={styles.empty}>No data for trend</Text></View>;
 
+    return (
+        <View style={styles.chartPadding}>
             <LineChart
                 dataSet={[
-                    {
-                        data: chartData.incomeData,
-                        color: '#22c55e', // Green
-                        thickness: 3,
-                    },
-                    {
-                        data: chartData.expenseData,
-                        color: '#ef4444', // Red
-                        thickness: 3,
-                    },
-                    {
-                        data: chartData.netData,
-                        color: '#3b82f6', // Blue
-                        thickness: 4,
-                    },
+                    { data: chartData.income, color: '#22c55e', thickness: 2 },
+                    { data: chartData.expense, color: '#ef4444', thickness: 2 },
+                    { data: chartData.net, color: '#3b82f6', thickness: 3 },
                 ]}
-                isAnimated                  // Animates the first time it loads
-                animationDuration={1500}     // Makes the drawing slow and elegant
-                animateOnDataChange         // Smooth transition when you filter/change data
-                onDataChangeAnimationDuration={400}
-                animationType="timing"
-
-                // Crucial props for centered X-Axis:
+                // PHYSICS & SCROLL
+                curved
+                isAnimated
+                height={170}
+                spacing={75}            // Extra space so numbers don't touch
+                initialSpacing={30}
+                width={SCREEN_WIDTH - 80}
+                adjustToWidth={false}
+                
+                // DATA POINT TEXT FIX
+                showValuesAsDataPointsText={true}
+                dataPointsHeight={0}    // Make dots invisible but existing
+                dataPointsWidth={0}     // Make dots invisible but existing
+                
+                // AXIS & GRID
                 maxValue={chartData.maxVal}
                 mostNegativeValue={-chartData.maxVal}
-                noOfSections={3} // 3 sections above 0
-                noOfSectionsBelowXAxis={3} // 3 sections below 0
-
-                height={320}
-                width={width - 80}
-                spacing={60}
-                initialSpacing={20}
-                xAxisThickness={2}
-                xAxisColor={'#333'} // This line will now be in the middle
-                yAxisColor={'#ccc'}
-                yAxisTextStyle={{ color: '#666', fontSize: 10 }}
-                rulesType="solid"
-                rulesColor="#eeeeee"
-                pointerConfig={{
-                    pointerStackChildrenProviders: [
-                        (item) => <View style={styles.pointerDot} />, // Custom dot on the line
-                    ],
-                    showPointerStrip: true,
-                    pointerStripUptoDataPoint: true,
-                    pointerStripColor: 'lightgray',
-                    pointerStripWidth: 2,
-                    strokeDashArray: [5, 5], // Makes the vertical line dashed
-                    radius: 6,
-                    pointerLabelComponent: (items) => {
-                        // 'items' is an array containing the data point for each line at this X-index
-                        return (
-                            <View style={styles.tooltipContainer}>
-                                <Text style={styles.tooltipDate}>{items[0].label}</Text>
-
-                                <View style={styles.tooltipRow}>
-                                    <Text style={{ color: '#22c55e' }}>Inc: </Text>
-                                    <Text style={styles.tooltipValue}>${items[0].value}</Text>
-                                </View>
-
-                                <View style={styles.tooltipRow}>
-                                    <Text style={{ color: '#ef4444' }}>Exp: </Text>
-                                    <Text style={styles.tooltipValue}>${Math.abs(items[1].value)}</Text>
-                                </View>
-
-                                <View style={styles.tooltipRow}>
-                                    <Text style={{ color: '#3b82f6' }}>Net: </Text>
-                                    <Text style={styles.tooltipValue}>${items[2].value}</Text>
-                                </View>
-                            </View>
-                        );
-                    },
-                    pointerLabelWidth: 120,
-                    pointerLabelHeight: 90,
-                    activatePointersOnLongPress: false, // Set to true if you want it only on long press
-                    autoAdjustPointerLabelPosition: true,
-                }}
+                noOfSections={2}
+                noOfSectionsBelowXAxis={2}
+                yAxisThickness={0}
+                xAxisThickness={1}
+                xAxisColor="#CBD5E1"
+                yAxisTextStyle={styles.axisText}
+                xAxisLabelTextStyle={styles.axisText}
+                rulesType="dashed"
+                rulesColor="#F1F5F9"
             />
+            
+            <View style={styles.legend}>
+                <Dot color="#22c55e" label="Income" />
+                <Dot color="#ef4444" label="Expense" />
+                <Dot color="#3b82f6" label="Balance" />
+            </View>
         </View>
     );
 };
 
+const Dot = ({ color, label }) => (
+    <View style={styles.dotRow}>
+        <View style={[styles.dot, { backgroundColor: color }]} />
+        <Text style={styles.dotLabel}>{label}</Text>
+    </View>
+);
+
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#fff', alignItems: 'center' },
-    header: { fontSize: 20, fontWeight: '700', marginVertical: 20, color: '#1a1a1a' },
-    selector: { flexDirection: 'row', gap: 10, marginBottom: 30 },
-    chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd' },
-    chipActive: { backgroundColor: '#333', borderColor: '#333' },
-    chipText: { fontSize: 12, fontWeight: '600', color: '#666' },
-    pointerLabel: { backgroundColor: '#fff', padding: 8, borderRadius: 4, borderWidth: 1, borderColor: '#ccc' },
-    tooltipContainer: {
-        backgroundColor: '#333',
-        padding: 10,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    tooltipDate: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        textAlign: 'center',
-    },
-    tooltipRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginVertical: 2,
-    },
-    tooltipValue: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 12,
-    },
-    pointerDot: {
-        height: 12,
-        width: 12,
-        backgroundColor: 'white',
-        borderWidth: 3,
-        borderColor: '#3b82f6',
-        borderRadius: 6,
-    }
+    chartPadding: { paddingLeft: 5, paddingBottom: 10, alignItems: 'center' },
+    axisText: { fontSize: 8, color: '#94A3B8' },
+    legend: { flexDirection: 'row', justifyContent: 'center', gap: 15, marginTop: 15 },
+    dotRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    dot: { width: 6, height: 6, borderRadius: 3 },
+    dotLabel: { fontSize: 12, color: '#64748B', fontWeight: '600' },
+    emptyWrap: { height: 160, justifyContent: 'center', alignItems: 'center' },
+    empty: { color: '#94A3B8', fontSize: 12 }
 });
 
 export default BalancedFinancialGraph;

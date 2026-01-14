@@ -4,11 +4,11 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { fonts } from '../../constants';
 import { formatMoney, formatDate } from '../../utils/formatters';
 
-const TransactionItem = ({ item, onEdit, onDelete }) => {
+const TransactionItem = ({ item }) => {
     const isIncome = item.category === 0;
 
     return (
-        <TouchableOpacity style={styles.container} onPress={onEdit} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.container} activeOpacity={0.7}>
             <View style={styles.leftSection}>
                 <View style={[styles.iconCircle, { backgroundColor: isIncome ? '#ECFDF5' : '#FFF1F2' }]}>
                     <Icon name={isIncome ? "arrow-up" : "arrow-down"} size={20} color={isIncome ? "#10B981" : "#EF4444"} />
@@ -23,7 +23,6 @@ const TransactionItem = ({ item, onEdit, onDelete }) => {
 
             <View style={styles.rightSection}>
                 <Text style={[styles.amount, { color: isIncome ? '#059669' : '#DC2626' }]}>{formatMoney(item.amount)}</Text>
-                {onDelete && <TouchableOpacity style={{ opacity: 0.5 }} onPress={onDelete}><Icon name="trash-outline" size={18} color="#94A3B8" /></TouchableOpacity>}
             </View>
         </TouchableOpacity>
     );
@@ -32,7 +31,7 @@ const TransactionItem = ({ item, onEdit, onDelete }) => {
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12,
-        paddingHorizontal: 16, backgroundColor: '#fff', borderRadius: 16, marginBottom: 8, elevation: 1.5
+        paddingHorizontal: 16, backgroundColor: '#fff', borderRadius: 20, marginBottom: 0, elevation: 1.5
     },
     leftSection: { flexDirection: 'row', alignItems: 'center', flex: 1 },
     iconCircle: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 14 },

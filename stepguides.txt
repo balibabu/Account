@@ -1,6 +1,7 @@
 ????????? DO NOT MAKE ANY UI CHANGES / JUST ORGANIZE THE CODE / MAKE IT MODULAR ????????
 
 
+
 ========================================== completed STEPS +++++++++++++++++++++++++++++++++++++++++
 
 -> create login page with firestore integration [done]
@@ -16,6 +17,11 @@
 -> use icons
 -> change bottom tabs icons
 -> donot submit empty form
+-> fix fingerprint
+-> reduce gap between net income and statcards
+check swipe feature -> edit and delete
+fix filter
+fix graph
 
 
 
@@ -53,3 +59,6 @@ npm install react-native-biometrics @react-native-async-storage/async-storage
 
 //icons 
 npm install react-native-vector-icons
+
+//for swipe
+npm install react-native-gesture-handler

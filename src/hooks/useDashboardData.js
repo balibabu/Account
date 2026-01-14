@@ -1,33 +1,31 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
 export const useDashboardData = (data, filter) => {
     return useMemo(() => {
         const now = new Date();
+        const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
         const filteredDocs = data.filter(item => {
-            const itemDate = new Date(item.date);
-            if (filter === 'Yearly') return itemDate.getFullYear() === now.getFullYear();
-            if (filter === 'Monthly') {
-                return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
-            }
+            const d = new Date(item.date); // Local conversion happens here
+            const dMid = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+            if (filter === 'Yearly') return d.getFullYear() === now.getFullYear();
+            
+            if (filter === 'Monthly') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            
             if (filter === 'Weekly') {
-                const oneWeekAgo = new Date();
-                oneWeekAgo.setDate(now.getDate() - 7);
-                return itemDate >= oneWeekAgo && itemDate <= now;
+                const startOfWeek = new Date(todayMid);
+                startOfWeek.setDate(todayMid.getDate() - 6); // 7 days including today
+                return dMid >= startOfWeek && dMid <= todayMid;
             }
             return true;
         });
 
-        let income = 0;
-        let expense = 0;
-
-        filteredDocs.forEach(item => {
-            const amount = parseFloat(item.amount) || 0;
-            item.category === 0 ? (income += amount) : (expense += amount);
-        });
+        let income = 0, expense = 0;
+        filteredDocs.forEach(i => i.category === 0 ? income += Number(i.amount) : expense += Number(i.amount));
 
         return {
-            income,
-            expense,
+            income, expense,
             balance: income - expense,
             filtered: filteredDocs.sort((a, b) => new Date(b.date) - new Date(a.date))
         };

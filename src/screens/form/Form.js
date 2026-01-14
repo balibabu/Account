@@ -21,7 +21,7 @@ export default function Form({ route, navigation }) {
 
 
     useEffect(() => {
-        console.log(data);
+        // console.log(data);
         if (!isEditing) return;
         const item = data.find(i => i.id === id);
         setAmount(String(item.amount));

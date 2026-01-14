@@ -4,9 +4,12 @@ import ReactNativeBiometrics from 'react-native-biometrics';
 const rnBiometrics = new ReactNativeBiometrics();
 export default async function triggerBiometricAuth(onSuccess = () => { }) {
     try {
-        const { success } = await rnBiometrics.simplePrompt();
+        const { success } = await rnBiometrics.simplePrompt({
+            promptMessage: 'Unlock App',
+            cancelButtonText: 'Use PIN',
+        });
         if (success) onSuccess();
     } catch (error) {
-        Alert.alert("Something went wrong.", 'Biometrics cancelled or failed');
+        Alert.alert("Error occured !!!", error.message);
     }
 }

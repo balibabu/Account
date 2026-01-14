@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useData } from '../../contexts/DataContext';
 import { fonts } from '../../constants';
@@ -52,9 +52,9 @@ export default function Home() {
                 <Text style={styles.sectionTitle}>Recent Transactions</Text>
                 {dashboardData.filtered.length === 0 ?
                     <Text style={styles.emptyText}>No transactions found for this period.</Text> :
-                    dashboardData.filtered.slice(0, 10).map((item) => <TransactionItem key={item.id} item={item} onEdit={() => navigation.navigate('Form', { id: item.id })}/>)}
+                    dashboardData.filtered.slice(0, 10).map((item) => <View key={item.id}><TransactionItem item={item} /><View style={{ height: 9 }} /></View>)}
             </ScrollView>
-            <FloatingButton onPress={() => navigation.navigate('Form')}/>
+            <FloatingButton onPress={() => navigation.navigate('Form')} />
         </SafeAreaView>
     );
 }
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     header: { backgroundColor: '#4A90E2', paddingTop: 10, paddingBottom: 20, paddingHorizontal: 20, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
     headerTitle: { color: '#fff', fontSize: 28, marginBottom: 15, letterSpacing: 0.5, fontFamily: fonts.bold },
     scrollContent: { padding: 20 },
-    mainBalanceCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24, elevation: 6, marginBottom: 20, borderWidth: 1, borderColor: '#F1F5F9' },
+    mainBalanceCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24, elevation: 6, marginBottom: 15, borderWidth: 1, borderColor: '#F1F5F9' },
     balanceHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 15 },
     balanceInfo: { flexDirection: 'row', alignItems: 'center' },
     balanceLabel: { fontSize: 14, fontFamily: fonts.regular, color: '#64748B' },
@@ -76,4 +76,5 @@ const styles = StyleSheet.create({
     statsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, gap: 15 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 10, marginTop: 5 },
     emptyText: { textAlign: 'center', color: '#999', padding: 20 },
+    listContent: { padding: 2, paddingBottom: 100, gap: 10 },
 });

@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
     header: { backgroundColor: '#4A90E2', paddingTop: 10, paddingBottom: 25, paddingHorizontal: 20, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, elevation: 5 },
     headerTitle: { color: '#fff', fontSize: 28, fontFamily: fonts.bold, marginBottom: 15, letterSpacing: 0.5 },
     scrollContent: { padding: 20 },
-    chartWrapper: { backgroundColor: '#F5F7FA', borderRadius: 20, padding: 16, marginBottom: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
+    chartWrapper: { overflow: 'hidden', backgroundColor: '#F5F7FA', borderRadius: 20, padding: 16, marginBottom: 20, elevation: 3, },
     chartTitle: { fontSize: 16, fontFamily: fonts.bold, color: '#1E293B', marginBottom: 15, textAlign: 'center' },
-    loader: { height: 200, justifyContent: 'center' }
+    loader: { height: 200, justifyContent: 'center' },
 });

@@ -26,7 +26,7 @@ export default function MyBottomTabs() {
 
 const screenOptions = ({ route }) => ({
     headerShown: false,
-    animation: 'shift',
+    // animation: 'shift',
     tabBarActiveTintColor: '#2563eb',
     tabBarInactiveTintColor: '#64748b',
     tabBarHideOnKeyboard: true,

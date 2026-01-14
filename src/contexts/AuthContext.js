@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { EmailAuthProvider, getAuth, onAuthStateChanged, reauthenticateWithCredential, signInWithEmailAndPassword, signOut, updatePassword } from '@react-native-firebase/auth';
 import MyIndicator from '../components/MyIndicator';
+import LoginScreen from '../screens/login/LoginScreen';
 
 const AuthContext = createContext();
 const auth = getAuth();
@@ -24,8 +25,8 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, changePassword }}>
-            {initializing ? <MyIndicator text={'loading user info'} /> : children}
+        <AuthContext.Provider value={{ user, logout, changePassword }}>
+            {initializing ? <MyIndicator text={'loading user info'} /> : user ? children : <LoginScreen login={login} />}
         </AuthContext.Provider>
     );
 };

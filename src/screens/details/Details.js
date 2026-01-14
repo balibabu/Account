@@ -9,6 +9,7 @@ import FocusAwareStatusBar from '../../components/FocusAwareStatusBar';
 import FloatingButton from '../../components/FloatingButton';
 import TransactionItem from '../home/TransactionItem';
 import { useTransactionFilters } from '../../hooks/useTransactionFilters';
+import SwipeToDelete from '../../components/SwipeToDelete';
 
 export default function DetailsScreen({ navigation }) {
     const { data, remove } = useData();
@@ -54,7 +55,11 @@ export default function DetailsScreen({ navigation }) {
                 data={filteredData}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
-                renderItem={({ item }) => <TransactionItem item={item} onEdit={() => navigation.navigate('Form', { id: item.id })} onDelete={() => handleDelete(item.id)} />}
+                renderItem={({ item }) => (
+                    <SwipeToDelete onDelete={() => handleDelete(item.id)} onEdit={() => navigation.navigate('Form', { id: item.id })}>
+                        <TransactionItem item={item} />
+                    </SwipeToDelete>
+                )}
                 ListEmptyComponent={<EmptyState />}
             />
 
@@ -72,6 +77,7 @@ export default function DetailsScreen({ navigation }) {
         </SafeAreaView>
     );
 }
+//                 renderItem={({ item }) => <TransactionItem item={item} onEdit={() => navigation.navigate('Form', { id: item.id })} onDelete={() => handleDelete(item.id)} />}
 
 const DateFilter = ({ label, date, onPress }) => (
     <View style={styles.filterGroup}>
@@ -104,7 +110,7 @@ export const styles = StyleSheet.create({
     filterLabel: { fontSize: 11, fontWeight: 'bold', color: '#64748B', marginBottom: 5, textTransform: 'uppercase' },
     dateInput: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#E2E8F0', justifyContent: 'space-between', alignItems: 'center' },
     dateText: { fontSize: 13, color: '#1E293B' },
-    listContent: { padding: 20, paddingBottom: 100 },
+    listContent: { padding: 20, paddingBottom: 100,  gap:10},
     emptyState: { alignItems: 'center', marginTop: 100 },
     emptyText: { color: '#94A3B8', fontSize: 14, marginTop: 10 }
 });
